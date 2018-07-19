@@ -1,0 +1,10 @@
+ 1016  vi fastqc.py 
+ 1017  fastqc -o temp SRR3225638_1.fastq.gz 
+ 1018  mkdir temp
+ 1019  fastqc -o temp SRR3225638_1.fastq.gz 
+ 1020  history 5 >> cmds
+ 1045  rm -rf Fastqc/
+ 1046  trim_galore --fastqc SRR3225638_1.fastq.gz
+ 1047  trim_galore --help
+ 1048  trim_galore --help | less
+ 1049  history 5 >> cmds

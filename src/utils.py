@@ -1,16 +1,9 @@
 import sys
 import multiprocessing
 
-def toolcheck(cmd):
-	p = Pshell(cmd)
-	p.process()
-	if 'command not found' in p.err:
-		return False
-	return True
-
 class Pshell():
 
-    def __init__(self,commend=""):
+    def __init__(self,commend):
         self.commend = commend
         self.out = ""
 
@@ -22,16 +15,14 @@ class Pshell():
 
     def process(self):
         import subprocess
-        #print(self.commend)
+        print(self.commend)
         t = subprocess.Popen(self.commend,shell=True,stdout = subprocess.PIPE,stderr = subprocess.PIPE)
         self.out = t.stdout.read().decode()
         self.err = t.stderr.read().decode()
-        #print(self.err)
+        print(self.err)
 
     def get_result(self):
         return self.out
-    def get_error(self):
-        return self.err
 
 class reads():
 

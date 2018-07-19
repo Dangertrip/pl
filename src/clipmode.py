@@ -30,12 +30,12 @@ def writefiles(UnmappedReads,step,length_bin,max_length,outputname):
     print(Part_Fastq_Filename)
     return Part_Fastq_Filename
 
-def do_process(l):
+def do_process(l,param):
     #print(l+'in')
     temp = l.strip().split()
     length = len(temp)
     if length<=0 or length>2:
-		return False,"Parameter error in "+l
+        return False,"Parameter error in "+l
         #print("Parameter error in "+l)
         #sys.exit()
     outputname = temp[0][:len(temp[0])-6]
@@ -138,20 +138,20 @@ def do_process(l):
     Bam.process()
     m=Pshell('samtools merge '+outputname+'_combine.bam '+outputname+'.bam '+outputname+'_split.bam')
     m.process()
-	return True,outputname+'_combine.bam'
+    return True,outputname+'_combine.bam'
     print("Merge done!\nCreated final bam file called "+outputname+'_combine.bam')
 
-def clipmode(filenames):
-	names=[]
-	for file in filenames:
-		mark,s = do_process(file)
-		if mark==False:
-			print()"Mapping task about "+l+" didn't finish because of error.")
-		else:
-			names.append(s)
-	return True,names
-	
-	
+def clipmode(filenames,param):
+    names=[]
+    for file in filenames:
+        mark,s = do_process(file,param)
+        if mark==False:
+            print("Mapping task about "+l+" didn't finish because of error.")
+        else:
+            names.append(s)
+    return True,names
+    
+    
 
 if __name__=="__main__":
     with open("config.txt") as f:

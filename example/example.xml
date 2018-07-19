@@ -1,0 +1,9 @@
+<xml>
+    <fastq>a_1.fq,a_2.fq b_1.fq,b_2.fq</fastq>
+    <label>a b</label>
+    <clip>1</clip>
+    <window>30</window>
+    <step>5</step>
+    <ref>./hg19.fa</ref>
+    <process>1</process>
+</xml>
