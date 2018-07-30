@@ -93,6 +93,26 @@ def overlap(a,b,step,length_bin):
         return True
     if orderb-ordera-suma<=(length_bin/step)-1: return True
     return False
+
+def RemoveFastqExtension(name):
+    '''
+    This function is used for remove extensions like .gz .fq .fastq.gz
+    '''
+    newname = name
+    if newname[-3:].lower()=='.gz':
+        newnamename=newname[:-3]
+    if newname[-3:].lower()=='.fq':
+        newname=newname[:-3]
+    if newname[-6:].lower()=='.fastq':
+        newname=newname[:-6]
+    return newname
+
+
+
+
+
+
+
 '''
 def cut(step,bin,reads,file_order):
 #    print(step,bin,reads,file_order)

@@ -14,7 +14,7 @@ class Trim():
         self.path = path+'/Trim'
 
     def process(self,filename):
-        p = Pshell('trim_galore -o '+self.path+' '+filename)
+        p = Pshell('trim_galore --gz -o '+self.path+' '+filename)
         p.process()
 
 if __name__=='__main__':

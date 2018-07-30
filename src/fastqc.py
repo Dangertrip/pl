@@ -1,5 +1,6 @@
 from utils import *
 import os
+
 class Fastqc():
 
 
@@ -17,8 +18,8 @@ class Fastqc():
     def run(self,filename):
         pshell=Pshell('fastqc -o '+path+' '+filename)
         pshell.process()
-        return filename[:filename.find('.')]
 
+    
 
 if __name__=="__main__":
     a = Fastqc()
