@@ -31,29 +31,33 @@ def writefiles(UnmappedReads,step,length_bin,max_length,outputname):
     print(Part_Fastq_Filename)
     return Part_Fastq_Filename
 
-def do_process(l):
+def do_process(temp,param):
     #print(l+'in')
-    temp = l.strip().split()
+    #temp = l.strip().split()
     length = len(temp)
     if length<=0 or length>2:
         print("Parameter error in "+l)
         sys.exit()
+    refpath = param['ref']
     #refpath='/data/dsun/ref/mouseigenome/mm10.fa'
-    refpath = '/data/dsun/ref/humanigenome/hg19.fa'
-    tempname=temp[0].lower()
-    if tempname.endswith(".gz"):
-        tempname = tempname[:-3]
-    if tempname.endswith(".fq"):
-        tempname = tempname[:-3]
-    if tempname.endswith(".fastq"):
-        tempname = tempname[:-6]
-    outputname = temp[0][:len(tempname)]
+    #refpath = '/data/dsun/ref/humanigenome/hg19.fa'
+    #tempname=temp[0].lower()
+    #if tempname.endswith(".gz"):
+    #    tempname = tempname[:-3]
+    #if tempname.endswith(".fq"):
+    #    tempname = tempname[:-3]
+    #if tempname.endswith(".fastq"):
+    #    tempname = tempname[:-6]
+    outputname = RemoveFastqExtension(temp[0])
     #print(outputname)
+
+    originallogname = outputname+'_originallog.record'
+
     phred=33
     if length==2 :
-        commend='bsmap -a '+temp[0]+' -b '+temp[1]+' -z '+str(phred)+' -d '+refpath+' -o '+outputname+'.bam -n 1 -r 0'
+        commend='bsmap -a '+temp[0]+' -b '+temp[1]+' -z '+str(phred)+' -d '+refpath+' -o '+outputname+'.bam -n 1 -r 0 1>>log 2>>'+originallogname
     else:
-        commend='bsmap -a '+temp[0]+' -z '+str(phred)+' -d '+refpath+'  -o '+outputname+'.bam -n 1 -r 0'
+        commend='bsmap -a '+temp[0]+' -z '+str(phred)+' -d '+refpath+'  -o '+outputname+'.bam -n 1 -r 0 1>>log 2>>'+originallogname
     First_try = Pshell(commend)
     First_try.process()
 
@@ -85,8 +89,10 @@ def do_process(l):
 
     UnmappedReads = {}
     o=0
-    step = 5
-    length_bin = 30#30
+    #step = 5
+    #length_bin = 30#30
+    step = param['step']
+    length_bin = param['window']
     max_length = 24#50
 
     Part_Fastq_Filename=[]
@@ -159,8 +165,10 @@ def do_process(l):
     #import combine to generate the finalfastq
 
     combine(outputname,Part_Fastq_Filename,step,length_bin)
+    
+    splitlogname = outputname+'_split_log.record'
 
-    commend = 'bsmap -a '+outputname+'_finalfastq.fastq -d '+refpath+' -z '+str(phred)+' -o '+outputname+'_split.bam -n 1 -r 0'
+    commend = 'bsmap -a '+outputname+'_finalfastq.fastq -d '+refpath+' -z '+str(phred)+' -o '+outputname+'_split.bam -n 1 -r 0 1>>log 2>> '+splitlogname
     Bam = Pshell(commend)
     Bam.process()
     splitfilename = outputname+'_split.bam'
@@ -192,7 +200,33 @@ def do_process(l):
     filter.process()
     m=Pshell('samtools merge '+outputname+'_combine.bam '+outputname+'.bam '+outputname+'_split.bam')
     m.process()
+    return outputname+'_combine.bam',originallogname,splitlogname
     print("Merge done!\nCreated final bam file called "+outputname+'_combine.bam')
+
+def clipmode(name,param):
+    '''
+    When we get the mapping result, we should report 
+    mapping ratio, mapped reads number, length distribution,
+    original mapping ratio, original mapped reads number,
+    new generated splitted reads number, new generated splitted reads length
+    '''
+    newname=[]
+    log=[]
+    for n in names:
+        newn,originallog,splitlog=do_process(n,param)
+        newname.append(newn)
+        log.append([originallog,splitlog])
+
+    if True:# param['cleanmode']  Set a clean mode and full mode for clipping mode
+        cleanupmess(name,newname)
+
+    return newname,log
+
+def cleanupmess(inputname,outputname):
+    name = RemoveFastqExtension(inputname[0])
+    pass
+
+
 
 if __name__=="__main__":
     with open("config.txt") as f:
