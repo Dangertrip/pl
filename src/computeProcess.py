@@ -21,7 +21,7 @@ def computeQC(name,fastqc,param={}):
     fastqc.run(filename)
     return name,fn
 
-def computeTrim(name,trim,param={})
+def computeTrim(name,trim,param={}):
     fn=''
     trimmedname=[]
     triminfo=[]
@@ -94,6 +94,10 @@ def computeProcess(param):
         
     '''
     All computing job is done here. Plotting is behind.
+    Plots:
+    1. Extract trim ratio from trim report files. Generate a bar plot
+    2. ExtracE.
+    
     '''
         
          

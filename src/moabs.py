@@ -69,7 +69,7 @@ class Bsmap():
         '''
         this.refpath = param['ref']
 
-    def normalmode(self,file,param={})
+    def normalmode(self,file,param={}):
         f = file.strip().split()
         name = this.path+f[0]+'.bam'
         logname = this.path+RemoveFastqExtension(f[0])+'.record'

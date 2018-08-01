@@ -2,6 +2,7 @@ import argparse
 import os
 import xml.dom.minidom
 from computeProcess import computeProcess
+from utils import *
 '''
     fastq pairs             k pairs
     sample label            k labels
@@ -19,7 +20,7 @@ def nameprocess(s):
             ff=f.strip().split(',')
         else:
             ff = [f]
-    ans.append(ff)
+        ans.append(ff)
     return ans
 
 
@@ -32,16 +33,26 @@ def getxmlcontent(dom,x):
 
 
 def text_process(filename):
+    '''
+    All process for reading config text in XML format.
+    This only works for the mode which use file to input parameters
+    '''
     dom = xml.dom.minidom.parse(filename)
     #root = dom.documentElement
     dic={}
-    tagnames = ['fastq','label','clip','window','step','ref','process']
+    tagnames = ['fastq','label','clip','window','step','ref','process','genome']
     tagcontent = list(map(lambda x:getxmlcontent(dom,x),tagnames))
     for i in range(len(tagnames)):
         name = tagnames[i]
         content = tagcontent[i]
         if name=='fastq':
             dic[name]=nameprocess(content.strip().split())
+            '''
+            Split fastq file name using comma(,)
+            Format will be like S1_1,S1_2 S2 S3 S4_1,S4_2
+            feed nameprocess() a name list like above(use split to eliminate the blank)
+            it will return [['S1_1','S1_2'],['S2'],['S3'],['S4_1','S4_2']]
+            '''
             continue
         if name=='label':
             dic[name]=content.strip().split()
@@ -49,6 +60,8 @@ def text_process(filename):
         if name=='ref':
             dic[name]=content
             continue
+        if name=='genome':
+            dic[name]=content
         dic[name]=int(content)
         
     return dic
@@ -60,6 +73,9 @@ def inputorN(v):
         return None
 
 def valid(param):
+    '''
+    check whether parameters are valid.
+    '''
     name = param['name']
     for n in name:
         for nn in n:
@@ -69,20 +85,23 @@ def valid(param):
         raise Exception('Number of samples and number of labels should be the same!')
     if not os.path.exists(param['ref']):
         raise Exception(param['ref']+' not exist!')
+    if param['clip'] and param['trim']:
+        print("Don't need to trim for clipping mode! Set -t to 0")
 
 def input_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f','--file',type=int, help=r'Enter a number, 0 means using parameter to set up, 1 means using text file to set up',required=True,default=0)
-    parser.add_argument('-sf','--settingfile',help='Setting txt file name. Ignore if -f is 0.',required=True)
+    parser.add_argument('-sf','--settingfile',help='Setting txt file name. Ignore if -f is 0.')
     parser.add_argument('-n','--name',nargs="*",help=r'Fastq file name. ',required=True)
     parser.add_argument('-c','--clip',help=r'Clip mode. 0 means close. 1 means open. default: 0',type=int,default=0)
     parser.add_argument('-l','--label',nargs="*",help=r'Labels for samples',required=True)
+    parser.add_argument('-g','--genome',help='Genome the reference belong to.(Use for plotting) hg18/hg19/mm10/mm9 and so on. Plotting script will not avaliable if leave it blank')
     parser.add_argument('-w','--window',type=int,help=r'Window length for clipping mode.')
     parser.add_argument('-s','--step',type=int,help=r'Step size for clipping mode.')
     parser.add_argument('-p','--process',type=int,help=r'Process using for one pipeline. Normally bsmap will cost 8 cpu number. So total will be 8p.')
     parser.add_argument('-r','--ref',help=r'Reference',required=True)
-    parser.add_argument('-qc','--QualityControl',help=r'Do(1) quality control or not(0)',default=False,required=True)
-    parser.add_argument('-t','--trim',help=r"Do(1) trimming or not(0). Don't need to do trimming if you use clip mode.")
+    parser.add_argument('-qc','--QualityControl',help=r'Do(1) quality control or not(0)',default=True,required=False)
+    parser.add_argument('-t','--trim',help=r"Do(1) trimming or not(0). Don't need to do trimming if you use clip mode.",default=True,required=False)
 
     args = parser.parse_args()
     '''
@@ -92,6 +111,7 @@ def input_args():
         raise Exception("No file designated as fastq files!")
     if (not )
     '''
+    
     if args.file==1:
         param=text_process(args.settingfile)
     else:
@@ -101,9 +121,10 @@ def input_args():
                'window':int(inputorN(args.window)), 
                'step':int(inputorN(args.step)), 
                'process':int(inputorN(args.step)), 
-               'ref':(args.ref or None) 
-               'qc':int(args.QualityControl)
+               'ref':(args.ref or None), 
+               'qc':int(args.QualityControl),
                'trim':int(args.trim)
+               'genome':args.genome
               }
     valid(param)
     return param
