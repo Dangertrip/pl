@@ -70,7 +70,8 @@ class Bsmap():
         this.refpath = param['ref']
 
     def normalmode(self,file,param={}):
-        f = file.strip().split()
+        #f = file.strip().split()
+        f = file
         name = this.path+f[0]+'.bam'
         logname = this.path+RemoveFastqExtension(f[0])+'.record'
         if len(f)==1:
@@ -85,8 +86,5 @@ class Bsmap():
         '''
         I should return a bam file name and a log file name here
         '''
-        mark,names = clipmode(filenames,param)
-        if mark:
-            return mark,names
-        else:
-            return False,[]
+        newname,log = clipmode(filenames,param)
+        return newname,log

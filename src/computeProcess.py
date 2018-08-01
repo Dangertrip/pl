@@ -3,6 +3,7 @@ from fastqc import Fastqc
 from trim import Trim
 import bsplot
 from utils import *
+from NumExtractor import *
 
 def computeQC(name,fastqc,param={}):
     '''
@@ -94,11 +95,61 @@ def computeProcess(param):
         
     '''
     All computing job is done here. Plotting is behind.
+    Table:
+    Filename, Label, trim ratio(TrimOutputExtractor),input reads,mapped reads, unique mapped reads,
+    clipped reads, unique clipped reads, all mapped reads, unique all, mapping ratio, unique mapping ratio
+    
     Plots:
     1. Extract trim ratio from trim report files. Generate a bar plot
-    2. ExtracE.
+    2. Extract bsmap mapping ratio 
+    3. 
     
     '''
+    originalfilename = param['name']
+    filelabel = param['label']
+    marker=['Filename','Label']
+    if param['qc']:
+        marker.append('QC')
+    if param['trim']:
+        marker.append('Trim')
+        trimresult =TrimOutputExtractor(resultfilename['trim']) 
+    '''
+    Result from BsmapResult:
+    [[total reads,mapped reads,uniquely mapped reads, clipped reads, unique clipped reads,
+    all mapped reads, all uniquely mapped reads, mapping ratio, uniquely mapping ratio],...]
+    '''
+    marker.extend(['Input reads','mapped reads','uniquely mapped reads','clipped reads','uniquely clipped reads','all mapped reads','all uniquely mapped reads','mapping ratio','uniquely mapping ratio'])
+    bsmapresult = BsmapResult(resultfilename['bsmap'])#All contents required by the last extend
+
+    sample=0
+    datatable=[marker]
+    for orin in originalfilename:
+        l = label[sample]
+        br = bsmapresult[sample]
+        temp=[]
+        filenum=0
+        for nn in orin:
+            temp.extend([nn,l])
+            if param['qc']:
+                temp.append(resultfilename['qc'][sample][filenum])
+            if param['trim']:
+                temp.append(resultfilename['trim'][sample][filenum])
+            filenum=filenum+1
+            temp.extend(br)
+        sample = sample+1
+        datatable.append(temp)
+        
+
+    datatableprint = list(map(lambda x: ''.join(list(map(lambda y:str(y)+'\t',x ))).strip(),datatable))
+    with open('RESULT/datatable.txt','w') as f:
+        f.writelines(datataleprint)
+    '''
+    Table generated as RESULT/datatable.txt
+    '''
+
+
+
+
         
          
         

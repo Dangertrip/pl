@@ -87,6 +87,9 @@ def valid(param):
         raise Exception(param['ref']+' not exist!')
     if param['clip'] and param['trim']:
         print("Don't need to trim for clipping mode! Set -t to 0")
+    if os.path.exists('RESULT'):
+        raise "RESULT file exists! Please delete RESULT or change name"
+    os.mkdir("RESULT")
 
 def input_args():
     parser = argparse.ArgumentParser()

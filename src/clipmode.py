@@ -2,7 +2,8 @@ import multiprocessing
 from Comb_fastq import combine
 from utils import *
 import sys
-
+import gzip
+import os
 def cut(step,length_bin,link,i):
     start = step*i
     end = length_bin + start
@@ -30,20 +31,33 @@ def writefiles(UnmappedReads,step,length_bin,max_length,outputname):
     print(Part_Fastq_Filename)
     return Part_Fastq_Filename
 
-def do_process(l,param):
+def do_process(temp,param):
     #print(l+'in')
-    temp = l.strip().split()
+    #temp = l.strip().split()
     length = len(temp)
     if length<=0 or length>2:
-        return False,"Parameter error in "+l
-        #print("Parameter error in "+l)
-        #sys.exit()
-    outputname = temp[0][:len(temp[0])-6]
+        print("Parameter error in "+l)
+        sys.exit()
+    refpath = param['ref']
+    #refpath='/data/dsun/ref/mouseigenome/mm10.fa'
+    #refpath = '/data/dsun/ref/humanigenome/hg19.fa'
+    #tempname=temp[0].lower()
+    #if tempname.endswith(".gz"):
+    #    tempname = tempname[:-3]
+    #if tempname.endswith(".fq"):
+    #    tempname = tempname[:-3]
+    #if tempname.endswith(".fastq"):
+    #    tempname = tempname[:-6]
+    outputname = RemoveFastqExtension(temp[0])
     #print(outputname)
+
+    originallogname = outputname+'_originallog.record'
+
+    phred=33
     if length==2 :
-        commend='bsmap -a '+temp[0]+' -b '+temp[1]+'  -d /data/dsun/ref/humanigenome/hg19.fa -o '+outputname+'.bam -n 1 -q 3 -r 0'
+        commend='bsmap -a '+temp[0]+' -b '+temp[1]+' -z '+str(phred)+' -d '+refpath+' -o '+outputname+'.bam -n 1 -r 0 1>>log 2>>'+originallogname
     else:
-        commend='bsmap -a '+temp[0]+' -d /data/dsun/ref/humanigenome/hg19.fa  -o '+outputname+'.bam -n 1 -q 3 -r 0'
+        commend='bsmap -a '+temp[0]+' -z '+str(phred)+' -d '+refpath+'  -o '+outputname+'.bam -n 1 -r 0 1>>log 2>>'+originallogname
     First_try = Pshell(commend)
     First_try.process()
 
@@ -75,30 +89,48 @@ def do_process(l,param):
 
     UnmappedReads = {}
     o=0
-    step = 5
-    length_bin = 30#30
+    #step = 5
+    #length_bin = 30#30
+    step = param['step']
+    length_bin = param['window']
     max_length = 24#50
 
     Part_Fastq_Filename=[]
 
     for filename in inputfileinfo:
         o+=1
+        gzmark=False
+        if filename.endswith('.gz'):
+            f = gzip.open(filename)
+            gzmark=True
+        else:
+            f = open(filename)
 
-        with open(filename) as f:
+        if f:
             while 1:
-                line1 = f.readline()
+                if gzmark:
+                    line1 = f.readline().decode()
+                else:
+                    line1 = f.readline()
                 if not line1:
                     break
+                if gzmark:
+                    line2 = f.readline().decode().strip()
+                    line3 = f.readline().decode()
+                    line4 = f.readline().decode().strip()
+                else:
+                    line2 = f.readline().strip()
+                    line3 = f.readline()
+                    line4 = f.readline().strip()
                 line1 = line1.strip().split()
-                line2 = f.readline().strip()
-                line3 = f.readline()
-                line4 = f.readline().strip()
                 line1[0] = line1[0]
  #           print(line1[0][1:])
                 if (line1[0][1:] in set_sam):
-                #print(line1[0][1:],set_sam[line1[0][1:]],int(line1[1][0]))
+                    string_mark = o
+                    if line1[1][0]>='1' and line1[1][0]<='2':
+                        string_mark = int(line1[1][0])
                     if set_sam[line1[0][1:]]==0 or set_sam[line1[0][1:]]==3 : continue
-                    if set_sam[line1[0][1:]]==int(line1[1][0]) : continue
+                    if set_sam[line1[0][1:]]==string_mark : continue
 
                 temp = line1[0]
                 if length>1: temp+='_'+line1[1][0]
@@ -119,12 +151,13 @@ def do_process(l,param):
         pfn=writefiles(UnmappedReads,step,length_bin,max_length,outputname)
         if len(pfn)>len(Part_Fastq_Filename):
             Part_Fastq_Filename=pfn
-    #print('finish')
+    print('finish')
+    f.close()
     del UnmappedReads
     #We've got the splited fastq file, filename is stored in Part_Fastq_Filename
    # p = multiprocessing.Pool(processes=7)
     for i in range(len(Part_Fastq_Filename)):
-        commend = 'bsmap -a '+Part_Fastq_Filename[i]+'  -d /data/dsun/ref/humanigenome/hg19.fa  -o '+Part_Fastq_Filename[i]+'.bam -n 1 -q 3 -r 0 -R'
+        commend = 'bsmap -a '+Part_Fastq_Filename[i]+' -z '+str(phred)+' -d '+refpath+'  -o '+Part_Fastq_Filename[i]+'.bam -n 1 -r 0 -R'
         Batch_try = Pshell(commend)
         Batch_try.process()
 
@@ -132,32 +165,74 @@ def do_process(l,param):
     #import combine to generate the finalfastq
 
     combine(outputname,Part_Fastq_Filename,step,length_bin)
+    
+    splitlogname = outputname+'_split_log.record'
 
-    commend = 'bsmap -a '+outputname+'_finalfastq.fastq -d /data/dsun/ref/humanigenome/hg19.fa  -o '+outputname+'_split.bam -n 1 -q 3 -r 0'
+    commend = 'bsmap -a '+outputname+'_finalfastq.fastq -d '+refpath+' -z '+str(phred)+' -o '+outputname+'_split.bam -n 1 -r 0 1>>log 2>> '+splitlogname
     Bam = Pshell(commend)
     Bam.process()
+    splitfilename = outputname+'_split.bam'
+    header = outputname+'.header'
+    command='samtools view -H '+splitfilename+' > '+header
+    filter = Pshell(command)
+    filter.process()
+    split_length=40
+    command='samtools view '+splitfilename+"| awk '{if (length($10)>"+str(split_length)+") print}' > "+splitfilename+'.sam'
+    filter.change(command)
+    filter.process()
+    command='cat '+header+' '+splitfilename+'.sam | samtools view -bS - > '+splitfilename+'.bam'
+    filter.change(command)
+    filter.process()
+    command='samtools sort -@ 4 '+splitfilename+'.bam'+' -o '+splitfilename+'.sorted.bam'
+    filter.change(command)
+    filter.process()
+    command='samtools sort -@ 4 '+outputname+'.bam'+' -o '+outputname+'.sort.bam'
+    filter.change(command)
+    filter.process()
+    command='mv '+outputname+'.sort.bam '+outputname+'.bam'
+    filter.change(command)
+    filter.process()
+    command='mv '+splitfilename+'.sorted.bam '+splitfilename
+    filter.change(command)
+    filter.process()
+    command='rm '+splitfilename+'.bam '+splitfilename+'.sam'
+    filter.change(command)
+    filter.process()
     m=Pshell('samtools merge '+outputname+'_combine.bam '+outputname+'.bam '+outputname+'_split.bam')
     m.process()
-    return True,outputname+'_combine.bam'
+    return outputname+'_combine.bam',originallogname,splitlogname
     print("Merge done!\nCreated final bam file called "+outputname+'_combine.bam')
 
-def clipmode(filenames,param):
-    names=[]
-    for file in filenames:
-        mark,s = do_process(file,param)
-        if mark==False:
-            print("Mapping task about "+l+" didn't finish because of error.")
-        else:
-            names.append(s)
-    return True,names
-    
-    
+def clipmode(name,param):
+    '''
+    When we get the mapping result, we should report 
+    mapping ratio, mapped reads number, length distribution,
+    original mapping ratio, original mapped reads number,
+    new generated splitted reads number, new generated splitted reads length
+    '''
+    newname=[]
+    log=[]
+    #for n in names:
+    newn,originallog,splitlog=do_process(name,param)
+    newname.append(newn)
+    log.append([originallog,splitlog])
+
+    if True:# param['cleanmode']  Set a clean mode and full mode for clipping mode
+        cleanupmess(name,newname)
+
+    return newname,log
+
+def cleanupmess(inputname,outputname):
+    name = RemoveFastqExtension(inputname[0])
+    pass
+
+
 
 if __name__=="__main__":
     with open("config.txt") as f:
         lines = f.readlines()
     import multiprocessing
-    pool = multiprocessing.Pool(processes=1)
+    #pool = multiprocessing.Pool(processes=2)
     for l in lines:
         #pool.apply_async(do_process,(l,))
         do_process(l) #pass file name to do_process
