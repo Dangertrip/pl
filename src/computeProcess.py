@@ -4,6 +4,7 @@ from trim import Trim
 import bsplot
 from utils import *
 from NumExtractor import *
+from bedtools import Bedtools
 
 def computeQC(name,fastqc,param={}):
     '''

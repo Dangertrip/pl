@@ -107,10 +107,35 @@ def RemoveFastqExtension(name):
         newname=newname[:-6]
     return newname
 
+def toolcheck(command):
+    t = subprocess.Popen(command,shell=True,stdout = subprocess.PIPE,stderr = subprocess.PIPE)
+    out = t.stdout.read().decode()
+    err = t.stdout.read().decode()
+    if ' command not found' in out or ' command not found' in err:
+        return False
+    return True
 
+def readf(filename):
+    with open(filename) as f:
+        lines = f.readlines()
+    return lines
 
-
-
+def union(files):
+    dic={}
+    for f in files:
+        lines = readf(f)
+        for line in lines:
+            temp = line.strip().split()
+            key=temp[0]+'\t'+temp[1]+'\t'+temp[2]
+            if key in dic:
+                dic[key].append(int(temp[3]))
+            else:
+                dic[key]=[int(temp[3])]
+    for key in dic:
+        if len(dic[key])!=len(files):
+            del(dic[key])
+    return dic
+            
 
 
 '''

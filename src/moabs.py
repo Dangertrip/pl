@@ -30,15 +30,17 @@ class Mcall():
         '''
         NEED FIX THE PATH
         '''
-        cmd='mcall -m '+n+' -r '+this.refpath+' -p 8 1>>'+this.path+'log 2>>'+this.path+'err'
+        cmd='mcall -m '+name+' -r '+this.refpath+' -p 8 1>>'+this.path+'log 2>>'+this.path+'err'
         p = Pshell(cmd)
         p.process()
         generatedfile=['.G.bed','.HG.bed','_stat.txt']
         newname=[]
         for g in generatedfile:
-            os.rename(n+g,this.path+n[n.rfind('/'):]+g)
-            newname.append(this.path+n[n.rfind('/'):]+g)
-        
+            os.rename(name+g,this.path+name[name.rfind('/'):]+g)
+            newname.append(this.path+name[name.rfind('/'):]+g)
+       
+        cmd="awk '{if (NR!=1) print $1,$2,$3,$4}' "+newname[0]+'> '+newname[0]+'.short.bed'
+
         return newname[0],newname[2]
 
         

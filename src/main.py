@@ -105,6 +105,7 @@ def input_args():
     parser.add_argument('-r','--ref',help=r'Reference',required=True)
     parser.add_argument('-qc','--QualityControl',help=r'Do(1) quality control or not(0)',default=True,required=False)
     parser.add_argument('-t','--trim',help=r"Do(1) trimming or not(0). Don't need to do trimming if you use clip mode.",default=True,required=False)
+    parser.add_argument('-b','--binsize',help="Plot setting. Set the bin size for averaging methylation ratio among samples",default=1000000,required=False)
 
     args = parser.parse_args()
     '''
@@ -126,8 +127,9 @@ def input_args():
                'process':int(inputorN(args.step)), 
                'ref':(args.ref or None), 
                'qc':int(args.QualityControl),
-               'trim':int(args.trim)
-               'genome':args.genome
+               'trim':int(args.trim),
+               'genome':args.genome,
+               'bin':args.binsize
               }
     valid(param)
     return param

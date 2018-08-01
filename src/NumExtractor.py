@@ -1,10 +1,5 @@
 from utils import *
 
-def readf(filename):
-    with open(filename) as f:
-        lines = f.readlines()
-    return lines
-
 def BsmapOutputExtractor(filename):
     #aligned=[]
     #unique=[]
