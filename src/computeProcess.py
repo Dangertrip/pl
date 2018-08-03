@@ -5,6 +5,8 @@ import bsplot
 from utils import *
 from NumExtractor import *
 from bedtools import Bedtools
+from pandas import DataFrame
+from bsplot import *
 
 def computeQC(name,fastqc,param={}):
     '''
@@ -65,18 +67,19 @@ def computeMcall(name,mcall,param):
     return bedname,logname
 
 def computeProcess(param):
-    fastqc,trim,bsmap,mcall = Fastqc(), Trim(), Bsmap(), Mcall()
-    ProcessObject=[fastqc,trim,bsmap,mcall]
+    fastqc,trim,bsmap,mcall,bedtools = Fastqc(), Trim(), Bsmap(), Mcall(), Bedtools()
+    ProcessObject=[fastqc,trim,bsmap,mcall,bedtools]
     for obj in ProcessObject:
         status,word=obj.check()
         if not status:
             raise Exception(word)
     #check all software have been installed successfully.
-    for obj in ProcessObject:
+    for obj in ProcessObject[:-1]:
         obj.setpath('./')
     
     bsmap.setparam(param)
     mcall.setparam(param)
+    
 
     name = param['name']
     resultfilename={}
@@ -93,7 +96,7 @@ def computeProcess(param):
 
     name,mcallresult = computeMcall(name,mcall,param)
     resultfilename['mcall'] = mcallresult
-        
+    meth_cpg_bed_name=name
     '''
     All computing job is done here. Plotting is behind.
     Table:
@@ -147,8 +150,22 @@ def computeProcess(param):
     '''
     Table generated as RESULT/datatable.txt
     '''
+    if param['genome']!=None:
+        bedtools.setparam(param)
+        bedtools.makewindow()
+        shortnames=list(map(lambda x:x+'.short.bed',meth_cpg_bed_name))
+        intersectnames=bedtools.intersect(names)
+        methdic=union(intersectnames)
+        columns = ['chrom','start','end']
+        methdata=list(map(lambda x:x.split().extend(methdic[x]),methdic))
+        #columns.extend(list(map(lambda x:'F'+str(x),list(range(1,len(methdata[0])-2)))))
+        columns.extend(filelabel)
+        df = DataFrame(methdata,columns=columns)
+        point_cluster(df,method='TSNE','RESULT/point_cluster.png')
+        headmap(df,'RESULT/heatmap.png')
 
-
+        
+    
 
 
         

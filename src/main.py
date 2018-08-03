@@ -108,13 +108,6 @@ def input_args():
     parser.add_argument('-b','--binsize',help="Plot setting. Set the bin size for averaging methylation ratio among samples",default=1000000,required=False)
 
     args = parser.parse_args()
-    '''
-    if (not args.ref):
-        raise Exception("No file designated as reference!")
-    if (not args.name):
-        raise Exception("No file designated as fastq files!")
-    if (not )
-    '''
     
     if args.file==1:
         param=text_process(args.settingfile)
