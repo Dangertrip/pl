@@ -4,7 +4,7 @@ def BsmapOutputExtractor(filename):
     #aligned=[]
     #unique=[]
     #total=[]
-    lines = readf(name)
+    lines = readf(filename)
     countinputfile=sum(list(map(lambda x: 'Input read file' in x,lines)))
     total=0
     unique=0
@@ -13,7 +13,7 @@ def BsmapOutputExtractor(filename):
         for line in lines:
             if "total read pairs:" in line:
                 a = line.strip().split()
-                total=int(a[a.rfind('total read pairs:')+len('total read pairs:'):].split()[0])                    
+                total=int(line[line.rfind('total read pairs:')+len('total read pairs:'):].split()[0])                    
                 continue
             if "aligned pairs:" in line:
                 a = line.strip().split()
@@ -21,14 +21,15 @@ def BsmapOutputExtractor(filename):
                 unique = unique + int(a[6])*2
                 continue
             if "unpaired read #1:" in line or "unpaired read #2:" in line:
-                a = ling.strip().split()
+                a = line.strip().split()
                 aligned = aligned+int(a[3])
                 unique = unique+int(a[7])
     else:
         for line in lines:
-            if "total read pairs:" in line:
+            if "total reads:" in line:
                 a = line.strip().split()
-                total=int(a[a.rfind('total read pairs:')+len('total read pairs:'):].split()[0])
+                print(a)
+                total=int(line[line.rfind('total reads:')+len('total reads:'):].split()[0])
                 continue
             if "aligned reads:" in line:
                 a = line.strip().split()
@@ -42,6 +43,9 @@ def McallOutputExtractor(filename):
 
 
 def TrimOutputExtractor(filename):
+    '''
+    Tested
+    '''
     ratio=[]
     for nn in filename:
         temp=[]
@@ -89,6 +93,7 @@ def BsmapResult(filenames,clip):
         for name in filenames:
             ori = name
             ori_info = BsmapOutputExtractor(ori)
+            print(ori_info)
             total_reads,mapped_reads,uniquely_mapped_reads=ori_info
             _,clipped_reads,uniquely_clipped_reads=[0,0,0]
             result.append([total_reads,mapped_reads,uniquely_mapped_reads,clipped_reads,
@@ -97,3 +102,7 @@ def BsmapResult(filenames,clip):
                 (mapped_reads+clipped_reads)/float(total_reads),
                 (uniquely_mapped_reads+uniquely_clipped_reads)/float(total_reads)])
     return result
+
+if __name__=="__main__":
+    r=BsmapResult(['BAM_FILE/temp'],False)
+    print(r)

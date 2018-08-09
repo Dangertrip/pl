@@ -41,7 +41,7 @@ def GetFastqList(joined_reads,Part_Fastq_Filename,step,length_bin):
     return contentset
 
 
-def combine(outputname,Part_Fastq_Filename,step,length_bin):
+def combine(outputname,Part_Fastq_Filename,step,length_bin,filter=40):
     Part_Fastq_Filename=Part_Fastq_Filename
     #print(Part_Fastq_Filename)
     cache_length=3
@@ -129,6 +129,7 @@ def combine(outputname,Part_Fastq_Filename,step,length_bin):
             num=1
             for read,quality in fastq_dic[name]:
                 #read,quality = fastq_dic[name][num]
+                if (len(read)<filter): continue
                 f.write('@'+name+'_'+str(num)+'\n')
                 f.write(read+'\n')
                 f.write('+\n')

@@ -80,9 +80,9 @@ class Bsmap():
     def normalmode(self,file,param={}):
         #f = file.strip().split()
         f = file
-        purename = f[0][f[0].rfind('/')+1:]
+        purename = RemoveFastqExtension(f[0][f[0].rfind('/')+1:])
         name = self.path+purename+'.bam'
-        logname = self.path+RemoveFastqExtension(purename)+'.record'
+        logname = self.path+purename+'.record'
         if len(f)==1:
             cmd = 'bsmap -a '+f[0]+' -d '+self.refpath+' -o '+name+' -n 0 1>>BAM_FILE/bsmap_log 2>'+logname
         else:

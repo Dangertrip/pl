@@ -40,7 +40,7 @@ def text_process(filename):
     dom = xml.dom.minidom.parse(filename)
     #root = dom.documentElement
     dic={}
-    tagnames = ['fastq','label','clip','window','step','ref','process','genome']
+    tagnames = ['fastq','label','clip','window','step','ref','process','genome','qc','trim','binsize','filter']
     tagcontent = list(map(lambda x:getxmlcontent(dom,x),tagnames))
     for i in range(len(tagnames)):
         name = tagnames[i]
@@ -93,19 +93,20 @@ def valid(param):
 
 def input_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f','--file',type=int, help=r'Enter a number, 0 means using parameter to set up, 1 means using text file to set up',required=True,default=0)
-    parser.add_argument('-sf','--settingfile',help='Setting txt file name. Ignore if -f is 0.')
-    parser.add_argument('-n','--name',nargs="*",help=r'Fastq file name. ',required=True)
+    parser.add_argument('-f','--file',type=int, help=r'Required. Enter a number, 0 means using parameter to set up, 1 means using text file to set up',required=True,default=0)
+    parser.add_argument('-sf','--settingfile',help='Required. Setting txt file name. Ignore if -f is 0.')
+    parser.add_argument('-n','--name',nargs="*",help=r'Required. Fastq file name. ')
     parser.add_argument('-c','--clip',help=r'Clip mode. 0 means close. 1 means open. default: 0',type=int,default=0)
-    parser.add_argument('-l','--label',nargs="*",help=r'Labels for samples',required=True)
-    parser.add_argument('-g','--genome',help='Genome the reference belong to.(Use for plotting) hg18/hg19/mm10/mm9 and so on. Plotting script will not avaliable if leave it blank')
-    parser.add_argument('-w','--window',type=int,help=r'Window length for clipping mode.')
-    parser.add_argument('-s','--step',type=int,help=r'Step size for clipping mode.')
-    parser.add_argument('-p','--process',type=int,help=r'Process using for one pipeline. Normally bsmap will cost 8 cpu number. So total will be 8p.')
-    parser.add_argument('-r','--ref',help=r'Reference',required=True)
+    parser.add_argument('-l','--label',nargs="*",help=r'Required. Labels for samples')
+    parser.add_argument('-g','--genome',help='Required. Genome the reference belong to.(Use for plotting) hg18/hg19/mm10/mm9 and so on. Plotting script will not avaliable if leave it blank')
+    parser.add_argument('-w','--window',type=int,help=r'Window length for clipping mode, default=1000000',default=30)
+    parser.add_argument('-s','--step',type=int,help=r'Step size for clipping mode.',default=5)
+    parser.add_argument('-p','--process',type=int,help=r'Process using for one pipeline. Normally bsmap will cost 8 cpu number. So total will be 8p.',default=1)
+    parser.add_argument('-r','--ref',help=r'Required. Reference')
     parser.add_argument('-qc','--QualityControl',help=r'Do(1) quality control or not(0)',default=True,required=False)
     parser.add_argument('-t','--trim',help=r"Do(1) trimming or not(0). Don't need to do trimming if you use clip mode.",default=True,required=False)
     parser.add_argument('-b','--binsize',help="Plot setting. Set the bin size for averaging methylation ratio among samples",default=1000000,required=False)
+    parser.add_argument('-ft','--filter',help="filter for clipped reads",default=40)
 
     args = parser.parse_args()
     
@@ -122,7 +123,8 @@ def input_args():
                'qc':int(args.QualityControl),
                'trim':int(args.trim),
                'genome':args.genome,
-               'bin':args.binsize
+               'bin':args.binsize,
+               'filter_len':args.filter
               }
     valid(param)
     return param

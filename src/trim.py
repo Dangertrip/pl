@@ -16,7 +16,7 @@ class Trim():
     def setpath(self,path):
         self.path = path+'Trim'
 
-    def process(self,filename):
+    def run(self,filename):
         p = Pshell('trim_galore --gz -o '+self.path+' '+filename)
         p.process()
 
@@ -24,6 +24,6 @@ if __name__=='__main__':
     tr = Trim()
     #tr.check()
     tr.setpath('./')
-    tr.process('../trimtest/SRR1248444_1.1.1.1.fastq')
+    tr.run('../trimtest/SRR1248444_1.1.1.1.fastq')
 
 

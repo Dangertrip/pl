@@ -39,6 +39,10 @@ def do_process(temp,param):
         print("Parameter error in "+l)
         sys.exit()
     refpath = param['ref']
+    if 'filter_len' in param:
+        filter = param['filter_len']
+    else:
+        filter = 40
     #refpath='/data/dsun/ref/mouseigenome/mm10.fa'
     #refpath = '/data/dsun/ref/humanigenome/hg19.fa'
     #tempname=temp[0].lower()
@@ -60,7 +64,7 @@ def do_process(temp,param):
     else:
         commend='bsmap -a '+temp[0]+' -z '+str(phred)+' -d '+refpath+'  -o '+outputname+'.bam -n 1 -r 0 1>>log 2>>'+originallogname
     First_try = Pshell(commend)
-    First_try.process()
+    #First_try.process()
 
 #Test1 done
     inputfileinfo=temp
@@ -160,32 +164,33 @@ def do_process(temp,param):
     for i in range(len(Part_Fastq_Filename)):
         commend = 'bsmap -a '+Part_Fastq_Filename[i]+' -z '+str(phred)+' -d '+refpath+'  -o '+Part_Fastq_Filename[i]+'.bam -n 1 -r 0 -R 1>>bsmap_log 2>>bsmap_err'
         Batch_try = Pshell(commend)
-        Batch_try.process()
+        #Batch_try.process()
 
    #run bsmap and get bam files named as Part_Fastq_Filename[i].bam
     #import combine to generate the finalfastq
 
-    combine(outputname,Part_Fastq_Filename,step,length_bin)
+    combine(outputname,Part_Fastq_Filename,step,length_bin,filter)
     
     splitlogname = 'BAM_FILE/'+outputname+'_split_log.record'
 
     commend = 'bsmap -a '+outputname+'_finalfastq.fastq -d '+refpath+' -z '+str(phred)+' -o '+outputname+'_split.bam -n 1 -r 0 1>>log 2>> '+splitlogname
     Bam = Pshell(commend)
-    Bam.process()
+    #Bam.process()
     splitfilename = outputname+'_split.bam'
-    header = outputname+'.header'
-    command='samtools view -H '+splitfilename+' > '+header
+
+    #header = outputname+'.header'
+    #command='samtools view -H '+splitfilename+' > '+header
+    #filter = Pshell(command)
+    #filter.process()
+    #split_length=40
+    #command='samtools view '+splitfilename+"| awk '{if (length($10)>"+str(split_length)+") print}' > "+splitfilename+'.sam'
+    #filter.change(command)
+    #filter.process()
+    #command='cat '+header+' '+splitfilename+'.sam | samtools view -bS - > '+splitfilename+'.bam'
+    #filter.change(command)
+    #filter.process()
+    command='samtools sort -@ 4 '+splitfilename+' -o '+splitfilename+'.sorted.bam'
     filter = Pshell(command)
-    filter.process()
-    split_length=40
-    command='samtools view '+splitfilename+"| awk '{if (length($10)>"+str(split_length)+") print}' > "+splitfilename+'.sam'
-    filter.change(command)
-    filter.process()
-    command='cat '+header+' '+splitfilename+'.sam | samtools view -bS - > '+splitfilename+'.bam'
-    filter.change(command)
-    filter.process()
-    command='samtools sort -@ 4 '+splitfilename+'.bam'+' -o '+splitfilename+'.sorted.bam'
-    filter.change(command)
     filter.process()
     command='samtools sort -@ 4 '+outputname+'.bam'+' -o '+outputname+'.sort.bam'
     filter.change(command)
@@ -196,17 +201,17 @@ def do_process(temp,param):
     command='mv '+splitfilename+'.sorted.bam '+splitfilename
     filter.change(command)
     filter.process()
-    command='rm '+splitfilename+'.bam '+splitfilename+'.sam '+header
-    filter.change(command)
-    filter.process()
+    #command='rm '+splitfilename+'.bam '+splitfilename+'.sam '+header
+    #filter.change(command)
+    #filter.process()
+    m=Pshell('samtools merge BAM_FILE/'+outputname+'_combine.bam '+outputname+'.bam '+splitfilename)
+    m.process()
     command='mv '+outputname+'.bam BAM_FILE'
     filter.change(command)
     filter.process()
     command='mv '+splitfilename+' BAM_FILE'
     filter.change(command)
     filter.process()
-    m=Pshell('samtools merge BAM_FILE/'+outputname+'_combine.bam '+outputname+'.bam '+outputname+'_split.bam')
-    m.process()
     return 'BAM_FILE'+outputname+'_combine.bam',originallogname,splitlogname,[Part_Fastq_Filename,outputname+'_finalfastq.fastq',outputname+'.sam']
     print("Merge done!\nCreated final bam file called "+outputname+'_combine.bam')
 

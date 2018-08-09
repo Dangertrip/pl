@@ -96,11 +96,12 @@ def overlap(a,b,step,length_bin):
 
 def RemoveFastqExtension(name):
     '''
+    Tested
     This function is used for remove extensions like .gz .fq .fastq.gz
     '''
     newname = name
     if newname[-3:].lower()=='.gz':
-        newnamename=newname[:-3]
+        newname=newname[:-3]
     if newname[-3:].lower()=='.fq':
         newname=newname[:-3]
     if newname[-6:].lower()=='.fastq':
@@ -108,6 +109,9 @@ def RemoveFastqExtension(name):
     return newname
 
 def toolcheck(command):
+    '''
+    Tested
+    '''
     t = subprocess.Popen(command,shell=True,stdout = subprocess.PIPE,stderr = subprocess.PIPE)
     out = t.stdout.read().decode()
     err = t.stdout.read().decode()
@@ -116,11 +120,17 @@ def toolcheck(command):
     return True
 
 def readf(filename):
+    '''
+    Tested
+    '''
     with open(filename) as f:
         lines = f.readlines()
     return lines
 
 def union(files):
+    '''
+    Tested
+    '''
     dic={}
     for f in files:
         lines = readf(f)
@@ -138,5 +148,6 @@ def union(files):
             
 
 if __name__=="__main__":
-    dic=union(['BED_FILE/head_combine.bam.G.bed.short.bed','BED_FILE/head_combine.bam.G.bed.short.bed'])
-    print(dic)
+    #dic=union(['BED_FILE/head_combine.bam.G.bed.short.bed','BED_FILE/head_combine.bam.G.bed.short.bed'])
+    #print(dic)
+    print(RemoveFastqExtension('SRR1248444_2.fastq.gz'))

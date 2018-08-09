@@ -61,7 +61,7 @@ def computeMcall(name,mcall,param):
     bedname=[]
     logname=[]
     for n in name:
-        bn,ln=mcall.run(name)
+        bn,ln=mcall.run(n)
         bedname.append(bn)
         logname.append(ln)
     return bedname,logname
@@ -116,19 +116,19 @@ def computeProcess(param):
         marker.append('QC')
     if param['trim']:
         marker.append('Trim')
-        trimresult =TrimOutputExtractor(resultfilename['trim']) 
+        trimresult =TrimOutputExtractor(resultfilename['trim'],param['clip']) 
     '''
     Result from BsmapResult:
     [[total reads,mapped reads,uniquely mapped reads, clipped reads, unique clipped reads,
     all mapped reads, all uniquely mapped reads, mapping ratio, uniquely mapping ratio],...]
     '''
     marker.extend(['Input reads','mapped reads','uniquely mapped reads','clipped reads','uniquely clipped reads','all mapped reads','all uniquely mapped reads','mapping ratio','uniquely mapping ratio'])
-    bsmapresult = BsmapResult(resultfilename['bsmap'])#All contents required by the last extend
+    bsmapresult = BsmapResult(resultfilename['bsmap'],param['clip'])#All contents required by the last extend
 
     sample=0
     datatable=[marker]
     for orin in originalfilename:
-        l = label[sample]
+        l = filelabel[sample]
         br = bsmapresult[sample]
         temp=[]
         filenum=0
@@ -144,13 +144,13 @@ def computeProcess(param):
         datatable.append(temp)
         
 
-    datatableprint = list(map(lambda x: ''.join(list(map(lambda y:str(y)+'\t',x ))).strip(),datatable))
+    datatableprint = list(map(lambda x: ((''.join(list(map(lambda y:str(y)+'\t',x )))).strip()+'\n'),datatable))
     with open('RESULT/datatable.txt','w') as f:
-        f.writelines(datataleprint)
+        f.writelines(datatableprint)
     '''
     Table generated as RESULT/datatable.txt
     '''
-    if param['genome']!=None:
+    if param['genome']!=None and len(filelabel)>1:
         bedtools.setparam(param)
         bedtools.makewindow()
         shortnames=list(map(lambda x:x+'.short.bed',meth_cpg_bed_name))
@@ -161,7 +161,7 @@ def computeProcess(param):
         #columns.extend(list(map(lambda x:'F'+str(x),list(range(1,len(methdata[0])-2)))))
         columns.extend(filelabel)
         df = DataFrame(methdata,columns=columns)
-        point_cluster(df,method='TSNE','RESULT/point_cluster.png')
+        point_cluster(df,'RESULT/point_cluster.png')
         headmap(df,'RESULT/heatmap.png')
 
         
