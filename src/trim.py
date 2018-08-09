@@ -1,3 +1,6 @@
+'''
+Tested
+'''
 from utils import *
 import os
 class Trim():
@@ -11,7 +14,7 @@ class Trim():
         return True,''
 
     def setpath(self,path):
-        self.path = path+'/Trim'
+        self.path = path+'Trim'
 
     def process(self,filename):
         p = Pshell('trim_galore --gz -o '+self.path+' '+filename)
@@ -19,6 +22,8 @@ class Trim():
 
 if __name__=='__main__':
     tr = Trim()
-    tr.check()
+    #tr.check()
+    tr.setpath('./')
+    tr.process('../trimtest/SRR1248444_1.1.1.1.fastq')
 
 

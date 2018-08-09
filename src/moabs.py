@@ -1,4 +1,5 @@
 '''
+Tested
 This is a wapper for MOABS in this pipeline. It contains commands for BSMAP, bam sort, bam deduplicate, methylation calling.
 '''
 
@@ -17,29 +18,34 @@ class Mcall():
         return True,''
 
     def setpath(self,path):
-        this.path = path+'BED_FILE/'
+        self.path = path+'BED_FILE/'
 
     def setparam(self,param):
         mcallparam=None
         if 'mcall' in param:
             mcallparam=param['mcall']
-        this.refpath = param['ref']
-        this.extraparam=''
+        self.refpath = param['ref']
+        self.extraparam=''
 
     def run(self,name):
         '''
         NEED FIX THE PATH
         '''
-        cmd='mcall -m '+name+' -r '+this.refpath+' -p 8 1>>'+this.path+'log 2>>'+this.path+'err'
+        cmd='mcall -m '+name+' -r '+self.refpath+' -p 8 1>>'+self.path+'log 2>>'+self.path+'err'
         p = Pshell(cmd)
         p.process()
         generatedfile=['.G.bed','.HG.bed','_stat.txt']
         newname=[]
         for g in generatedfile:
-            os.rename(name+g,this.path+name[name.rfind('/'):]+g)
-            newname.append(this.path+name[name.rfind('/'):]+g)
+            os.rename(name+g,self.path+name[name.rfind('/'):]+g)
+            newname.append(self.path+name[name.rfind('/'):]+g)
        
-        cmd="awk '{if (NR!=1) print $1,$2,$3,$4}' "+newname[0]+'> '+newname[0]+'.short.bed'
+        cmd="awk -v OFS='\t' '{if (NR!=1) print $1,$2,$3,$4}' "+newname[0]+'> '+newname[0]+'.short.bed'
+        p.change(cmd)
+        p.process()
+        cmd="rm mSuite.G.bed"
+        p.change(cmd)
+        p.process()
 
         return newname[0],newname[2]
 
@@ -58,10 +64,10 @@ class Bsmap():
         return True,''
    
     def setpath(self,path):
-        this.path = path+'BAM_FILE/'
+        self.path = path+'BAM_FILE/'
 
     def setparam(self,param):
-        this.extraparam=''
+        self.extraparam=''
         bsmapparam=None
         if 'bsmap' in param:
             bsmapparam = param['bsmap']
@@ -69,17 +75,18 @@ class Bsmap():
         Once I'm ready to add all parameters for bsmap and mcall (After finish the dictionary 
         to parameter function, I will delete variable named ***param )
         '''
-        this.refpath = param['ref']
+        self.refpath = param['ref']
 
     def normalmode(self,file,param={}):
         #f = file.strip().split()
         f = file
-        name = this.path+f[0]+'.bam'
-        logname = this.path+RemoveFastqExtension(f[0])+'.record'
+        purename = f[0][f[0].rfind('/')+1:]
+        name = self.path+purename+'.bam'
+        logname = self.path+RemoveFastqExtension(purename)+'.record'
         if len(f)==1:
-            cmd = 'bsmap -a '+f[0]+' -d '+this.refpath+' -o '+name+' -n 0 1>>BAM_FILE/bsmap_log 2>'+logname
+            cmd = 'bsmap -a '+f[0]+' -d '+self.refpath+' -o '+name+' -n 0 1>>BAM_FILE/bsmap_log 2>'+logname
         else:
-            cmd = 'bsmap -a '+f[0]+' -b '+f[1]+' -d '+this.refpath+' -o '+name+'-n 0 1>>BAM_FILE/bsmap_log 2>'+logname
+            cmd = 'bsmap -a '+f[0]+' -b '+f[1]+' -d '+self.refpath+' -o '+name+'-n 0 1>>BAM_FILE/bsmap_log 2>'+logname
         p = Pshell(cmd)
         p.process()
         return name,logname
@@ -90,3 +97,16 @@ class Bsmap():
         '''
         newname,log = clipmode(filenames,param)
         return newname,log
+
+if __name__=="__main__":
+    #mcall = Mcall()
+    #print(mcall.check())
+    #bsmap = Bsmap()
+    #bsmap.setparam({'ref':'/data/dsun/ref/humanigenome/hg19.fa'})
+    #print(bsmap.check())
+    #bsmap.setpath('./')
+    #bsmap.normalmode(['Trim/head.fq'])
+    mcall = Mcall()
+    mcall.setpath('./')
+    mcall.setparam({'ref':'/data/dsun/ref/humanigenome/hg19.fa'})
+    mcall.run('BAM_FILE/head_combine.bam')

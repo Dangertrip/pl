@@ -13,7 +13,7 @@ np.random.seed(2)
 df = pd.DataFrame(np.random.rand(5,4), columns=['A', 'B', 'C', 'D'])
 df.boxplot() #也可用plot.box() 
 plt.show()
-'''
+
 
 def boxplot(data,xname,yname):
     sns.set_style("whitegrid")
@@ -31,7 +31,7 @@ def window(windowlength=10000,genome='hg19'):
     windowfile = 'PLOTS/chrom.window.'+str(windowlength)+'.bed'
     os.system('bedtools makewindows -g plot/chromsize.txt -n '+str(windowlength)+' > '+windowfile)
     return True,windowfile
-
+'''
 def point_cluster(data,method='TSNE',outputname):
     #data: DataFrame
     #contains labelname column, samplename column and data

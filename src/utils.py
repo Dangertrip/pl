@@ -1,5 +1,6 @@
 import sys
 import multiprocessing
+import subprocess
 
 class Pshell():
 
@@ -14,7 +15,6 @@ class Pshell():
         return commend
 
     def process(self):
-        import subprocess
         print(self.commend)
         t = subprocess.Popen(self.commend,shell=True,stdout = subprocess.PIPE,stderr = subprocess.PIPE)
         self.out = t.stdout.read().decode()
@@ -137,15 +137,6 @@ def union(files):
     return dic
             
 
-
-'''
-def cut(step,bin,reads,file_order):
-#    print(step,bin,reads,file_order)
-    start = step*file_order
-    end = start+bin
-    length = len(reads)
-    if end-step>=length or end-start<=length_bin-step:
-        return False,''
-    if end>length: end=length
-    return True,reads[start:end]
-'''
+if __name__=="__main__":
+    dic=union(['BED_FILE/head_combine.bam.G.bed.short.bed','BED_FILE/head_combine.bam.G.bed.short.bed'])
+    print(dic)

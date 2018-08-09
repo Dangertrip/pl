@@ -48,10 +48,11 @@ def do_process(temp,param):
     #    tempname = tempname[:-3]
     #if tempname.endswith(".fastq"):
     #    tempname = tempname[:-6]
-    outputname = RemoveFastqExtension(temp[0])
+    purename = temp[0][temp[0].rfind('/')+1:]
+    outputname = RemoveFastqExtension(purename)
     #print(outputname)
 
-    originallogname = outputname+'_originallog.record'
+    originallogname = 'BAM_FILE/'+outputname+'_originallog.record'
 
     phred=33
     if length==2 :
@@ -62,7 +63,7 @@ def do_process(temp,param):
     First_try.process()
 
 #Test1 done
-    inputfileinfo=l.strip().split()
+    inputfileinfo=temp
     commend = 'samtools view '+outputname+'.bam > '+outputname+'.sam'
     BamFileReader = Pshell(commend)
 
@@ -157,7 +158,7 @@ def do_process(temp,param):
     #We've got the splited fastq file, filename is stored in Part_Fastq_Filename
    # p = multiprocessing.Pool(processes=7)
     for i in range(len(Part_Fastq_Filename)):
-        commend = 'bsmap -a '+Part_Fastq_Filename[i]+' -z '+str(phred)+' -d '+refpath+'  -o '+Part_Fastq_Filename[i]+'.bam -n 1 -r 0 -R'
+        commend = 'bsmap -a '+Part_Fastq_Filename[i]+' -z '+str(phred)+' -d '+refpath+'  -o '+Part_Fastq_Filename[i]+'.bam -n 1 -r 0 -R 1>>bsmap_log 2>>bsmap_err'
         Batch_try = Pshell(commend)
         Batch_try.process()
 
@@ -166,7 +167,7 @@ def do_process(temp,param):
 
     combine(outputname,Part_Fastq_Filename,step,length_bin)
     
-    splitlogname = outputname+'_split_log.record'
+    splitlogname = 'BAM_FILE/'+outputname+'_split_log.record'
 
     commend = 'bsmap -a '+outputname+'_finalfastq.fastq -d '+refpath+' -z '+str(phred)+' -o '+outputname+'_split.bam -n 1 -r 0 1>>log 2>> '+splitlogname
     Bam = Pshell(commend)
@@ -195,12 +196,18 @@ def do_process(temp,param):
     command='mv '+splitfilename+'.sorted.bam '+splitfilename
     filter.change(command)
     filter.process()
-    command='rm '+splitfilename+'.bam '+splitfilename+'.sam'
+    command='rm '+splitfilename+'.bam '+splitfilename+'.sam '+header
     filter.change(command)
     filter.process()
-    m=Pshell('samtools merge '+outputname+'_combine.bam '+outputname+'.bam '+outputname+'_split.bam')
+    command='mv '+outputname+'.bam BAM_FILE'
+    filter.change(command)
+    filter.process()
+    command='mv '+splitfilename+' BAM_FILE'
+    filter.change(command)
+    filter.process()
+    m=Pshell('samtools merge BAM_FILE/'+outputname+'_combine.bam '+outputname+'.bam '+outputname+'_split.bam')
     m.process()
-    return outputname+'_combine.bam',originallogname,splitlogname
+    return 'BAM_FILE'+outputname+'_combine.bam',originallogname,splitlogname,[Part_Fastq_Filename,outputname+'_finalfastq.fastq',outputname+'.sam']
     print("Merge done!\nCreated final bam file called "+outputname+'_combine.bam')
 
 def clipmode(name,param):
@@ -213,29 +220,37 @@ def clipmode(name,param):
     newname=[]
     log=[]
     #for n in names:
-    newn,originallog,splitlog=do_process(name,param)
+    newn,originallog,splitlog,cleanname=do_process(name,param)
     newname.append(newn)
     log.append([originallog,splitlog])
 
-    if True:# param['cleanmode']  Set a clean mode and full mode for clipping mode
-        cleanupmess(name,newname)
+    if (not 'cleanmode' in param) or param['cleanmode']:
+        #Set a clean mode and full mode for clipping mode
+        cleanupmess(cleanname)
 
     return newname,log
 
-def cleanupmess(inputname,outputname):
-    name = RemoveFastqExtension(inputname[0])
-    pass
-
+def cleanupmess(name):
+    pfn,n1,n2 = name
+    os.system('rm '+n1)
+    os.system('rm '+n2)
+    for n in pfn:
+        os.system('rm '+n)
+        os.system('rm '+n+'.bam')
+        os.system('rm '+n+'.sam')
+    
 
 
 if __name__=="__main__":
-    with open("config.txt") as f:
-        lines = f.readlines()
-    import multiprocessing
+    
+    #with open("config.txt") as f:
+    #    lines = f.readlines()
+    #import multiprocessing
     #pool = multiprocessing.Pool(processes=2)
-    for l in lines:
+    #for l in lines:
         #pool.apply_async(do_process,(l,))
-        do_process(l) #pass file name to do_process
-    pool.close()
-    pool.join()
-
+    #    do_process(l) #pass file name to do_process
+    #pool.close()
+    #pool.join()
+    p = {'ref':'/data/dsun/ref/humanigenome/hg19.fa','step':5,'window':30,'cleanmode':True}
+    clipmode(['Trim/head.fq'],p)
