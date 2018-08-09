@@ -1,3 +1,6 @@
+'''
+Tested
+'''
 import matplotlib
 matplotlib.use('Agg')
 import numpy as np 
@@ -32,20 +35,20 @@ def window(windowlength=10000,genome='hg19'):
     os.system('bedtools makewindows -g plot/chromsize.txt -n '+str(windowlength)+' > '+windowfile)
     return True,windowfile
 '''
-def point_cluster(data,method='TSNE',outputname):
+def point_cluster(data,outputname,method='TSNE'):
     #data: DataFrame
     #contains labelname column, samplename column and data
     d = deepcopy(data)
     #print(di)
-    d.sort(['chrom','start'])
+    d.sort_values(['chrom','start'])
 
-    windowdata = d.values[3:,]
-    position = d.values[:3,]
+    windowdata = d.values[:,3:]
+    position = d.values[:,:3]
     label = d.columns[3:]
     #Every sample in a row
     #print(windowdata)
     dim=2
-    colors = cm.rainbow(np.linspace(0,1,num_group))
+    colors = cm.rainbow(np.linspace(0,1,len(label)))
 
     if method == 'PCA':
         pca = PCA(n_components=dim)
@@ -62,10 +65,11 @@ def point_cluster(data,method='TSNE',outputname):
     plt.xlim(xmin-0.2*np.abs(xmin),xmax+0.2*np.abs(xmax))
     plt.ylim(ymin-0.2*np.abs(ymin),ymax+0.2*np.abs(ymax))
     markers=['o', '^','v','<','>','1','2', '3','4','8','s','P','p', '*','H','h','x','X','D']
-    for i in range(len(label)):
+    label_u = np.unique(label)
+    for i in range(len(label_u)):
         cc = colors[i]
-        l = label[i]
-        pos = np.where(labels==label)
+        l = label_u[i]
+        pos = np.where(label==l)
         ma = markers[i]
         plt.scatter(x_tr[pos,0],x_tr[pos,1],c=cc,alpha=0.8,s=50,marker=ma,label=l)
 
@@ -81,17 +85,28 @@ def point_cluster(data,method='TSNE',outputname):
 def heatmap(data,outputname):
     from seaborn import clustermap 
     d = deepcopy(data)
-    d=d.drop(['chrom','start','end'])
-    sns_plot=clustermap(data)
+    #print(d)
+    d=d.drop(['chrom','start','end'],axis=1)
+    sns_plot=clustermap(d)
     sns_plot.ax_row_dendrogram.set_visible(False)
     sns_plot.savefig(outputname)
 
 
 if __name__=='__main__':
-    d = pd.DataFrame(data=np.arange(64).reshape(8,8))
-    d['label']=['a','a','a','b','b','b','c','c']
-    d['sample']=['a1','a2','a3','b1','b2','b3','c1','c2']
-    print(point_cluster(data=d,labelname='label',samplename='sample'))
+    with open('BED_FILE/head_combine.bam.G.bed.short.bed') as f:
+        lines = f.readlines()
+    d=[]
+    for line in lines:
+        temp = line.strip().split()
+        temp[-1]=float(temp[-1])
+        d.append(temp)
+    import random
+    for i in range(5):
+        for dd in d:
+            dd.append(random.random())
+    import pandas as pd
+    d = pd.DataFrame(d,columns=['chrom','start','end','L1','L2','L3','L4','L4','L4'])
+    heatmap(d,'a.pdf')
 
 
     
