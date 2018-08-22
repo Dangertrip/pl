@@ -109,7 +109,7 @@ def input_args():
     parser.add_argument('-ft','--filter',help="filter for clipped reads",default=40)
 
     args = parser.parse_args()
-    
+    #print(args.name) 
     if args.file==1:
         param=text_process(args.settingfile)
     else:

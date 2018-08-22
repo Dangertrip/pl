@@ -1,7 +1,7 @@
 import sys
 import multiprocessing
 import subprocess
-
+import os
 class Pshell():
 
     def __init__(self,commend):
@@ -136,16 +136,30 @@ def union(files):
         lines = readf(f)
         for line in lines:
             temp = line.strip().split()
+            if temp[3]=='.': continue
             key=temp[0]+'\t'+temp[1]+'\t'+temp[2]
             if key in dic:
-                dic[key].append(int(temp[3]))
+                dic[key].append(float(temp[3]))
             else:
-                dic[key]=[int(temp[3])]
+                dic[key]=[float(temp[3])]
+    del_arr=[]
     for key in dic:
         if len(dic[key])!=len(files):
-            del(dic[key])
+            del_arr.append(key)
+    for k in del_arr:
+        del(dic[k])
     return dic
             
+def exist(file):
+    for f in file:
+        if isinstance(f,list):
+            for ff in f:
+                if not os.path.exists(ff):
+                    return False
+        else:
+            if not os.path.exists(f):
+                return False
+    return True
 
 if __name__=="__main__":
     #dic=union(['BED_FILE/head_combine.bam.G.bed.short.bed','BED_FILE/head_combine.bam.G.bed.short.bed'])

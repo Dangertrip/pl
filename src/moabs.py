@@ -10,6 +10,7 @@ import os
 class Mcall():
 
     def check(self):
+        return True,''
         if not toolcheck('mcall'):
             return False,'Mcall not found!'
         if os.path.exists('BED_FILE'):
@@ -29,23 +30,23 @@ class Mcall():
 
     def run(self,name):
         '''
-        NEED FIX THE PATH
+        4 muted 37 41 46 49
         '''
         cmd='mcall -m '+name+' -r '+self.refpath+' -p 8 1>>'+self.path+'log 2>>'+self.path+'err'
         p = Pshell(cmd)
-        p.process()
+        #p.process()
         generatedfile=['.G.bed','.HG.bed','_stat.txt']
         newname=[]
         for g in generatedfile:
-            os.rename(name+g,self.path+name[name.rfind('/'):]+g)
-            newname.append(self.path+name[name.rfind('/'):]+g)
+            #os.rename(name+g,self.path+name[name.rfind('/')+1:]+g)
+            newname.append(self.path+name[name.rfind('/')+1:]+g)
        
         cmd="awk -v OFS='\t' '{if (NR!=1) print $1,$2,$3,$4}' "+newname[0]+'> '+newname[0]+'.short.bed'
         p.change(cmd)
-        p.process()
+        #p.process()
         cmd="rm mSuite.G.bed"
         p.change(cmd)
-        p.process()
+        #p.process()
 
         return newname[0],newname[2]
 
@@ -56,6 +57,7 @@ class Mcall():
 class Bsmap():
 
     def check(self):
+        return True,''
         if not toolcheck('bsmap -h'):
             return False,'BSMAP not found!'
         if os.path.exists('BAM_FILE'):
@@ -78,6 +80,9 @@ class Bsmap():
         self.refpath = param['ref']
 
     def normalmode(self,file,param={}):
+        '''
+        3 muted 96 98 100
+        '''
         #f = file.strip().split()
         f = file
         purename = RemoveFastqExtension(f[0][f[0].rfind('/')+1:])
@@ -86,9 +91,13 @@ class Bsmap():
         if len(f)==1:
             cmd = 'bsmap -a '+f[0]+' -d '+self.refpath+' -o '+name+' -n 0 1>>BAM_FILE/bsmap_log 2>'+logname
         else:
-            cmd = 'bsmap -a '+f[0]+' -b '+f[1]+' -d '+self.refpath+' -o '+name+'-n 0 1>>BAM_FILE/bsmap_log 2>'+logname
+            cmd = 'bsmap -a '+f[0]+' -b '+f[1]+' -d '+self.refpath+' -o '+name+' -n 0 1>>BAM_FILE/bsmap_log 2>'+logname
         p = Pshell(cmd)
-        p.process()
+        #p.process()
+        p.change('samtools sort -@ 4 '+name+' -o '+name+'.sorted.bam')
+        #p.process()
+        p.change('mv '+name+'.sorted.bam '+name)
+        #p.process()
         return name,logname
 
     def clipping(self,filenames,param={}):

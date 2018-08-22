@@ -35,8 +35,8 @@ def computeTrim(name,trim,param={}):
         for nn in n:
             newname = RemoveFastqExtension(nn)
             fn = fn+nn+' '
-            temp.append(newname+'_trimmed.fq.gz')
-            infotemp.append(nn+'_trimming_report.txt')
+            temp.append('Trim/'+newname+'_trimmed.fq.gz')
+            infotemp.append('Trim/'+nn+'_trimming_report.txt')
         trimmedname.append(temp)
         triminfo.append(infotemp)
     fn.strip()
@@ -45,6 +45,8 @@ def computeTrim(name,trim,param={}):
     return name,triminfo
 
 def computeBsmap(name,bsmap,param):
+    if not exist(name):
+        raise "Fastq not found"
     clip = param['clip']
     bamname=[]
     bamlogname=[]
@@ -58,6 +60,8 @@ def computeBsmap(name,bsmap,param):
     return bamname,bamlogname
 
 def computeMcall(name,mcall,param):
+    if not exist(name):
+        raise "BAM not found"
     bedname=[]
     logname=[]
     for n in name:
@@ -86,6 +90,8 @@ def computeProcess(param):
     if param['qc']:
         name,qcresult=computeQC(name,fastqc,{}) 
         resultfilename['qc']=qcresult
+        os.system('mkdir RESULT/qc')
+        os.system('cp Fastqc/*.html RESULT/qc')
     
     if param['trim']:
         name,trimresult = computeTrim(name,trim,{})
@@ -112,17 +118,31 @@ def computeProcess(param):
     originalfilename = param['name']
     filelabel = param['label']
     marker=['Filename','Label']
+    marker.append('QC')
     if param['qc']:
-        marker.append('QC')
+        qcresult = []
+        prepath = "qc/"
+        for q in resultfilename['qc']:
+            if len(q)==1:
+                qcresult.append('<a href="'+prepath+q[0]+'">QC'+'</a>')
+            else:
+                qcresult.append('<a href="'+prepath+q[0]+'">QC1'+'</a>,'+'<a href="'+prepath+q[1]+'">QC2'+'</a>')
+    else:
+        qcresult=["/" for i in range(len(originalfilename))]
+    marker.append('Trim')
     if param['trim']:
-        marker.append('Trim')
-        trimresult =TrimOutputExtractor(resultfilename['trim'],param['clip']) 
+        trimresult =TrimOutputExtractor(resultfilename['trim'],param['clip'])
+    else:
+        trimresult=["/" for i in range(len(originalfilename))]
+
     '''
     Result from BsmapResult:
     [[total reads,mapped reads,uniquely mapped reads, clipped reads, unique clipped reads,
     all mapped reads, all uniquely mapped reads, mapping ratio, uniquely mapping ratio],...]
     '''
-    marker.extend(['Input reads','mapped reads','uniquely mapped reads','clipped reads','uniquely clipped reads','all mapped reads','all uniquely mapped reads','mapping ratio','uniquely mapping ratio'])
+    marker.extend(['Input reads','mapped reads','uniquely mapped reads','clipped reads', \
+            'uniquely clipped reads','all mapped reads','all uniquely mapped reads',\
+            'mapping ratio','uniquely mapping ratio'])
     bsmapresult = BsmapResult(resultfilename['bsmap'],param['clip'])#All contents required by the last extend
 
     sample=0
@@ -132,14 +152,21 @@ def computeProcess(param):
         br = bsmapresult[sample]
         temp=[]
         filenum=0
-        for nn in orin:
-            temp.extend([nn,l])
-            if param['qc']:
-                temp.append(resultfilename['qc'][sample][filenum])
-            if param['trim']:
-                temp.append(resultfilename['trim'][sample][filenum])
-            filenum=filenum+1
-            temp.extend(br)
+        if len(orin)==1:
+            nn=orin[0]
+        else:
+            nn=orin[0]+','+orin[1]
+        temp.extend([nn,l])
+        #if param['qc']:
+        temp.append(qcresult[filenum])
+        #if param['trim']:
+        trim_s = trimresult[sample]
+        if trim_s=="/" or len(trim_s)==1:
+            temp.append(trimresult[sample][0])
+        else:
+            temp.append(trimresult[sample][0]+','+trimresult[sample][1])
+        filenum=filenum+1
+        temp.extend(br)
         sample = sample+1
         datatable.append(temp)
         
@@ -154,15 +181,18 @@ def computeProcess(param):
         bedtools.setparam(param)
         bedtools.makewindow()
         shortnames=list(map(lambda x:x+'.short.bed',meth_cpg_bed_name))
-        intersectnames=bedtools.intersect(names)
+        intersectnames=bedtools.intersect(name)
         methdic=union(intersectnames)
         columns = ['chrom','start','end']
-        methdata=list(map(lambda x:x.split().extend(methdic[x]),methdic))
+        #print(methdic)
+        methdata=list(map(lambda x:x.split()+methdic[x],methdic))
         #columns.extend(list(map(lambda x:'F'+str(x),list(range(1,len(methdata[0])-2)))))
         columns.extend(filelabel)
+        #print(methdata)
+        #print(columns)
         df = DataFrame(methdata,columns=columns)
         point_cluster(df,'RESULT/point_cluster.png')
-        headmap(df,'RESULT/heatmap.png')
+        heatmap(df,'RESULT/heatmap.png')
 
         
     
