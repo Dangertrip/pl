@@ -164,4 +164,20 @@ def exist(file):
 if __name__=="__main__":
     #dic=union(['BED_FILE/head_combine.bam.G.bed.short.bed','BED_FILE/head_combine.bam.G.bed.short.bed'])
     #print(dic)
-    print(RemoveFastqExtension('SRR1248444_2.fastq.gz'))
+    #print(RemoveFastqExtension('SRR1248444_2.fastq.gz'))
+    files=[]
+    for i in range(15):
+        files.append('../example/scWGBS/BED_FILE/'+str(i)+'.bed')
+    data=[]
+    dic=union(files)
+    columns = ['chrom','start','end']
+    #print(methdic)
+    methdata=list(map(lambda x:x.split()+dic[x],dic))
+    #columns.extend(list(map(lambda x:'F'+str(x),list(range(1,len(methdata[0])-2)))))
+    columns.extend(['MII','MII','MII','MII','MII','2iESC','2iESC','2iESC','2iESC','2iESC','Ser_ESC','Ser_ESC','Ser_ESC','Ser_ESC','Ser_ESC'])
+    #print(methdata)
+    #print(columns)
+    from pandas import DataFrame
+    from bsplot import *
+    df = DataFrame(methdata,columns=columns)
+    point_cluster(df,'point_clutser.png')

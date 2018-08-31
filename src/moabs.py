@@ -10,7 +10,7 @@ import os
 class Mcall():
 
     def check(self):
-        return True,''
+        #return True,''
         if not toolcheck('mcall'):
             return False,'Mcall not found!'
         if os.path.exists('BED_FILE'):
@@ -34,19 +34,19 @@ class Mcall():
         '''
         cmd='mcall -m '+name+' -r '+self.refpath+' -p 8 1>>'+self.path+'log 2>>'+self.path+'err'
         p = Pshell(cmd)
-        #p.process()
+        p.process()
         generatedfile=['.G.bed','.HG.bed','_stat.txt']
         newname=[]
         for g in generatedfile:
-            #os.rename(name+g,self.path+name[name.rfind('/')+1:]+g)
+            os.rename(name+g,self.path+name[name.rfind('/')+1:]+g)
             newname.append(self.path+name[name.rfind('/')+1:]+g)
        
         cmd="awk -v OFS='\t' '{if (NR!=1) print $1,$2,$3,$4}' "+newname[0]+'> '+newname[0]+'.short.bed'
         p.change(cmd)
-        #p.process()
+        p.process()
         cmd="rm mSuite.G.bed"
         p.change(cmd)
-        #p.process()
+        p.process()
 
         return newname[0],newname[2]
 
@@ -57,7 +57,7 @@ class Mcall():
 class Bsmap():
 
     def check(self):
-        return True,''
+        #return True,''
         if not toolcheck('bsmap -h'):
             return False,'BSMAP not found!'
         if os.path.exists('BAM_FILE'):
@@ -93,11 +93,11 @@ class Bsmap():
         else:
             cmd = 'bsmap -a '+f[0]+' -b '+f[1]+' -d '+self.refpath+' -o '+name+' -n 0 1>>BAM_FILE/bsmap_log 2>'+logname
         p = Pshell(cmd)
-        #p.process()
+        p.process()
         p.change('samtools sort -@ 4 '+name+' -o '+name+'.sorted.bam')
-        #p.process()
+        p.process()
         p.change('mv '+name+'.sorted.bam '+name)
-        #p.process()
+        p.process()
         return name,logname
 
     def clipping(self,filenames,param={}):

@@ -8,7 +8,7 @@ class Fastqc():
 
 
     def check(self):
-        return True,''
+        #return True,''
         if not toolcheck('fastqc --help'):
             return False,'Fastqc command not found'
         if os.path.exists('Fastqc'):
@@ -21,7 +21,7 @@ class Fastqc():
 
     def run(self,filename):
         pshell=Pshell('fastqc -o '+self.path+' '+filename)
-        #pshell.process()
+        pshell.process()
 
     
 

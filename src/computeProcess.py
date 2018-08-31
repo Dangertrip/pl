@@ -7,6 +7,7 @@ from NumExtractor import *
 from bedtools import Bedtools
 from pandas import DataFrame
 from bsplot import *
+import os
 
 def computeQC(name,fastqc,param={}):
     '''
@@ -193,6 +194,11 @@ def computeProcess(param):
         df = DataFrame(methdata,columns=columns)
         point_cluster(df,'RESULT/point_cluster.png')
         heatmap(df,'RESULT/heatmap.png')
+    abspath = os.path.abspath(__file__)
+    pos=abspath.find('computeProcess')
+    abspath = abspath[:pos]
+    os.system('cp '+abspath+'result.html RESULT/')
+    os.system('cp -r '+abspath+'lib RESULT/')
 
         
     

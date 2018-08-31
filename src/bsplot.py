@@ -11,45 +11,21 @@ import os
 from urllib import request
 from copy import deepcopy
 import matplotlib.cm as cm
-'''
-np.random.seed(2) 
-df = pd.DataFrame(np.random.rand(5,4), columns=['A', 'B', 'C', 'D'])
-df.boxplot() #也可用plot.box() 
-plt.show()
 
-
-def boxplot(data,xname,yname):
-    sns.set_style("whitegrid")
-    group_num = len(x)
-    fig,ax = plt.subplot(figsize=(10,10))
-    sns.boxplot(x=xname,y=yname,data = data,ax=ax)
-    fig.savefig('PLOTS/'+xname+'_'+yname+'.png')
-    return True,''
-
-def window(windowlength=10000,genome='hg19'):
-    if not os.path.exist('PLOTS/chromsize.txt'):
-        url=request.urlopen('http://hgdownload.cse.ucsc.edu/goldenPath/'+genome+'/bigZips/'+genome+'.chrom.sizes')
-    with open('PLOTS/chromsize.txt','w') as f:
-        f.write(url.read().decode())
-    windowfile = 'PLOTS/chrom.window.'+str(windowlength)+'.bed'
-    os.system('bedtools makewindows -g plot/chromsize.txt -n '+str(windowlength)+' > '+windowfile)
-    return True,windowfile
-'''
-def point_cluster(data,outputname,method='TSNE'):
+def point_cluster(data,outputname,method='PCA'):
     #data: DataFrame
     #contains labelname column, samplename column and data
     d = deepcopy(data)
     #print(di)
     d.sort_values(['chrom','start'])
 
-    windowdata = d.values[:,3:]
+    windowdata = d.values[:,3:].T
     position = d.values[:,:3]
     label = d.columns[3:]
     #Every sample in a row
     #print(windowdata)
     dim=2
     colors = cm.rainbow(np.linspace(0,1,len(label)))
-
     if method == 'PCA':
         pca = PCA(n_components=dim)
         x_tr = pca.fit_transform(windowdata)
